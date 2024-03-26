@@ -175,7 +175,7 @@ class Matrix:
     @staticmethod
     def _strassen_multiply_recursive(a: 'Matrix', b: 'Matrix') -> list[list[numeric]]:
         n = a.num_rows
-        result: list[list[numeric]] = [[0] * n for _ in range(n)]
+        result: list[list[numeric]] = []
         if n == 1:
             result.append([a.matrix[0][0] * b.matrix[0][0]])
             return result
@@ -192,7 +192,7 @@ class Matrix:
                 matrix=Matrix._strassen_multiply_recursive((a_parts[0] + a_parts[3]), (b_parts[0] + b_parts[3]))
             )
             m2 = Matrix(
-                matrix=Matrix._strassen_multiply_recursive((a_parts[2] + b_parts[3]), b_parts[0])
+                matrix=Matrix._strassen_multiply_recursive((a_parts[2] + a_parts[3]), b_parts[0])
             )
             m3 = Matrix(
                 matrix=Matrix._strassen_multiply_recursive(a_parts[0], (b_parts[1] - b_parts[3]))
@@ -215,18 +215,10 @@ class Matrix:
             c21 = m2 + m4
             c22 = m1 + m3 - m2 + m6
 
-            half_n = n // 2
-            for i in range(half_n):
-                for j in range(half_n):
-                    result[i][j] = c11.matrix[i][j]
-                    result[i][j + half_n] = c12.matrix[i][j]
-                    result[i + half_n][j] = c21.matrix[i][j]
-                    result[i + half_n][j + half_n] = c22.matrix[i][j]
-            #
-            # for row_c11, row_c12 in zip(c11.matrix, c12.matrix):
-            #     result.append(row_c11 + row_c12)
-            # for row_c21, row_c22 in zip(c21.matrix, c22.matrix):
-            #     result.append(row_c21 + row_c22)
+            for row_c11, row_c12 in zip(c11.matrix, c12.matrix):
+                result.append(row_c11 + row_c12)
+            for row_c21, row_c22 in zip(c21.matrix, c22.matrix):
+                result.append(row_c21 + row_c22)
 
             return result
 
