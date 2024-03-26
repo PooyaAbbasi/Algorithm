@@ -145,13 +145,26 @@ class Matrix:
         if not self.are_adjustable_for_multiplication_with_other_matrix(other):
             raise SizeError('multiplication not performable because size of other matrix is not adjustable')
 
+        self_rows_n, self_cols_n = self.num_rows, self.num_columns
+        other_rows_n, other_cols_n = other.num_rows, other.num_columns
+
         max_size_between_both_matrix = max(self.num_rows, self.num_columns, other.num_rows, other.num_columns)
         if not (self.is_square() and self.is_size_power_of_2()):
             self._fill_matrix_with_zero_to_make_size_power_of_two_and_make_square(max_size_between_both_matrix)
         if not (other.is_square() and other.is_size_power_of_2()):
             other._fill_matrix_with_zero_to_make_size_power_of_two_and_make_square(max_size_between_both_matrix)
 
-        return Matrix(matrix=Matrix._strassen_multiply_recursive(self, other))
+        # calculate multiply with Strassen algorithm
+        result_matrix = Matrix(matrix=Matrix._strassen_multiply_recursive(self, other))
+
+        # cleaning up zeros and padded elements
+        self.__clean_up_zeroes_and_transform_to_main_size(self_rows_n, self_cols_n)
+        other.__clean_up_zeroes_and_transform_to_main_size(other_rows_n, other_cols_n)
+
+        # the result matrix size of a multiply is rows of first(self) matrix and columns of second(other) matrix
+        result_matrix.__clean_up_zeroes_and_transform_to_main_size(self_rows_n, other_cols_n)
+
+        return result_matrix
 
     def are_adjustable_for_multiplication_with_other_matrix(self, other: 'Matrix') -> bool:
         return self.num_columns == other.num_rows
@@ -269,10 +282,11 @@ class Matrix:
 
         return partition
 
-    @staticmethod
-    def get_merge_partition(part_a: list[list[numeric]], part_b: list[list[numeric]]):
-        for row_a, row_b in zip(part_a, part_b):
-            yield row_a + row_b
+    def __clean_up_zeroes_and_transform_to_main_size(self, main_num_of_rows: int, main_num_of_cols: int):
+        for row, i in zip(self.matrix, range(main_num_of_rows)):
+            self.matrix[i] = row[:main_num_of_cols]
+
+        self.matrix = self.matrix[:main_num_of_rows]
 
 
 if __name__ == "__main__":
@@ -293,4 +307,4 @@ if __name__ == "__main__":
     m1 = Matrix(matrix=matrix1)
     m2 = Matrix(matrix=matrix2)
 
-    print(*(m1 * m2).matrix, sep='\n')
+    print((m1 * m2).matrix)
