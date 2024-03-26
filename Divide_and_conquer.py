@@ -175,10 +175,10 @@ class Matrix:
     @staticmethod
     def _strassen_multiply_recursive(a: 'Matrix', b: 'Matrix') -> list[list[numeric]]:
         n = a.num_rows
-        result = [[0] * n for _ in range(n)]  # Initialize result matrix
-
+        result: list[list[numeric]] = []
         if n == 1:
-            result[0][0] = a.matrix[0][0] * b.matrix[0][0]
+            result.append([a.matrix[0][0] * b.matrix[0][0]])
+            return result
         else:
             # Partition a, b
             a_parts = []
@@ -187,7 +187,6 @@ class Matrix:
                 a_parts.append(Matrix(matrix=Matrix.__get_partition(a.matrix, part=i)))
                 b_parts.append(Matrix(matrix=Matrix.__get_partition(b.matrix, part=i)))
 
-            # Calculate m1 to m7
             m1 = Matrix(
                 matrix=Matrix._strassen_multiply_recursive((a_parts[0] + a_parts[3]), (b_parts[0] + b_parts[3]))
             )
@@ -216,16 +215,12 @@ class Matrix:
             c21 = m2 + m4
             c22 = m1 + m3 - m2 + m6
 
-            # Combine c11, c12, c21, c22 into result matrix
-            half_n = n // 2
-            for i in range(half_n):
-                for j in range(half_n):
-                    result[i][j] = c11.matrix[i][j]
-                    result[i][j + half_n] = c12.matrix[i][j]
-                    result[i + half_n][j] = c21.matrix[i][j]
-                    result[i + half_n][j + half_n] = c22.matrix[i][j]
+            for row_c11, row_c12 in zip(c11.matrix, c12.matrix):
+                result.append(row_c11 + row_c12)
+            for row_c21, row_c22 in zip(c21.matrix, c22.matrix):
+                result.append(row_c21 + row_c22)
 
-        return result
+            return result
 
     @staticmethod
     def __get_partition(matrix_array: list[list[numeric]], part: int = 1) -> list[list[numeric]]:
